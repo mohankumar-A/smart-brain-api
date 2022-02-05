@@ -11,13 +11,15 @@ const image = require('./controllers/image');
 
 const db = knex({
   // connect to your own database here:
-  client: 'pg',
+  client: 'mysql',
   connection: {
     host : '127.0.0.1',
-    user : 'aneagoie',
-    password : '',
+    port : 3306,
+    user : 'root',
+    password : 'root@123',
     database : 'smart-brain'
-  }
+  },
+  debug: true
 });
 
 const app = express();

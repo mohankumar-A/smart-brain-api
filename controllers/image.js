@@ -1,8 +1,10 @@
+require('dotenv').config();
 const Clarifai = require('clarifai');
 
 //You must add your own API key here from Clarifai. 
+console.log(process.env.IMAGE_API_KEY)
 const app = new Clarifai.App({
- apiKey: 'YOUR API KEY HERE' 
+ apiKey: process.env.IMAGE_API_KEY 
 });
 
 const handleApiCall = (req, res) => {
@@ -25,17 +27,27 @@ const handleApiCall = (req, res) => {
 
 const handleImage = (req, res, db) => {
   const { id } = req.body;
-  db('users').where('id', '=', id)
-  .increment('entries', 1)
-  .returning('entries')
-  .then(entries => {
-    // If you are using knex.js version 1.0.0 or higher this now returns an array of objects. Therefore, the code goes from:
-    // entries[0] --> this used to return the entries
-    // TO
-    // entries[0].entries --> this now returns the entries
-    res.json(entries[0].entries);
-  })
-  .catch(err => res.status(400).json('unable to get entries'))
+  console.log(id);
+  db.transaction(async trx => {
+    try {
+      const entry = await trx('users')
+      .where('id', '=', id)
+      .increment('entries', 1)
+
+      console.log(entry);
+
+      const data = await trx
+        .select(["entries"])
+        .table("users")
+        .where("id", "=", id)
+
+      res.json(data[0].entries);
+
+    } catch(e) {
+      console.log(e);  // debug if needed
+      res.status(400).json('unable to get entries');
+    }
+  });
 }
 
 module.exports = {
